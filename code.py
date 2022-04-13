@@ -3,8 +3,13 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from math import pi, cos, sin
+import random
 
-size = 64
+squaresize = 32
+GridSize = 16
+windowSize = squaresize * GridSize
+px = windowSize/2
+py = windowSize/2
 def drawMap2D(map) :
     for y in range(len(map)) :
         for x in range(len(map[y])):
@@ -12,21 +17,21 @@ def drawMap2D(map) :
                 glColor3f(1.0,1.0,1.0)
             else :
                 glColor3f(1.0,0.0,3.0)
-            x0 = x*size
-            y0 = y*size
+            x0 = x*squaresize
+            y0 = y*squaresize
             glBegin(GL_QUADS)
-            glVertex2i(x0,y0)
-            glVertex2i(x0,y0+size)
-            glVertex2i(x0+size,y0+size)
-            glVertex2i(x0+size,y0)
+            glVertex2i(x0+1,y0+1)
+            glVertex2i(x0+1,y0+squaresize-1)
+            glVertex2i(x0+squaresize-1,y0+squaresize-1)
+            glVertex2i(x0+squaresize-1,y0+1)
             glEnd()
 
 
 def iterate() :
-    glViewport(0,0,500,500)
+    glViewport(0,0,windowSize,windowSize)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glOrtho(0.0,500,0.0,500,0.0,1.0)
+    glOrtho(0.0,windowSize,0.0,windowSize,0.0,1.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
@@ -43,18 +48,17 @@ class Draw:
         glColor3f(0.0,1.0,0.0)
         glPointSize(5.0)
         glBegin(GL_POINTS)
-        glVertex2f(x*size, y*size)
+        glVertex2f(x*squaresize, y*squaresize)
         glEnd()
         glFlush()
 
-    def plot_trait(x, y):
-        glColor3f(1.0,0.0,0.0)
+    def plot_trait(x, y, angle):
         glPointSize(5.0)
         glBegin(GL_LINES)        # GL_POINTS -> GL_LINES
-        glVertex2f(0.0, 0.0)
-        glVertex2f(1.0, 1.0)         # Added another Vertex specifying end coordinates of line
+        glVertex2f(x, y)
+        glVertex2f(x+cos(angle)*40, y+sin(angle)*40)         # Added another Vertex specifying end coordinates of line
         glEnd()
-        glFlush()
+
 
 
 
@@ -63,21 +67,19 @@ class Draw:
 
 class Grid:
     def __init__(self) :
-        self.SIZE = 8
-        self.grille = [
-                [1,1,1,1,1,1,1,1],
-                [1,0,0,0,0,0,0,1],
-                [1,0,0,0,1,0,0,1],
-                [1,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,1],
-                [1,0,0,1,0,0,0,1],
-                [1,0,0,0,0,0,0,1],
-                [1,1,1,1,1,1,1,1]
-            ]
-        self.x, self.y = 4,4 
-        self.yau = 0
+        self.SIZE = GridSize
+        self.grille = [[0 for k in range(self.SIZE)] for j in range(self.SIZE)]
+        self.x, self.y, self.yau = 4,4, 0
+
+    def gen(self) :
+        for y in range(self.SIZE) :
+            for x in range(self.SIZE) :
+                if x==0 or y==0 or x==self.SIZE-1 or y==self.SIZE-1 or random.randint(0,100)>85:
+                    self.grille[y][x] =1
+
 
 grille = Grid()
+grille.gen()
 
 class Inputs:
     def keyboard(key, x, y):
@@ -106,7 +108,11 @@ def display():
     drawMap2D(grille.grille)
     glColor3f(1.0,0.0,3.0)
     Draw.plot_points(grille.x, grille.y)
-    Draw.plot_trait(grille.x, grille.y)
+    glColor3f(1.0,0.0,0.0)
+    Draw.plot_trait(grille.x*squaresize, grille.y*squaresize, grille.yau)
+    glColor3f(1.0,1.0,0.0)
+    Draw.plot_trait(grille.x*squaresize, grille.y*squaresize, grille.yau+(pi/6))
+    Draw.plot_trait(grille.x*squaresize, grille.y*squaresize, grille.yau-(pi/6))
     # Copy the off-screen buffer to the screen.
     glutSwapBuffers()
 
@@ -116,7 +122,7 @@ glutInit(sys.argv)
 # So is creating an index-mode window.)
 glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
 
-glutInitWindowSize(500,500)
+glutInitWindowSize(windowSize,windowSize)
 glutInitWindowPosition(0,0)
 
 # Create a window, setting its title
