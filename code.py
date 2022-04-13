@@ -7,6 +7,8 @@ import random
 squaresize = 32
 GridSize = 16
 windowSize = squaresize * GridSize
+px = windowSize/2
+py = windowSize/2
 
 def drawMap2D(map) :
     for y in range(len(map)) :
@@ -18,10 +20,10 @@ def drawMap2D(map) :
             x0 = x*squaresize
             y0 = y*squaresize
             glBegin(GL_QUADS)
-            glVertex2i(x0,y0)
-            glVertex2i(x0,y0+squaresize)
-            glVertex2i(x0+squaresize,y0+squaresize)
-            glVertex2i(x0+squaresize,y0)
+            glVertex2i(x0+1,y0+1)
+            glVertex2i(x0+1,y0+squaresize-1)
+            glVertex2i(x0+squaresize-1,y0+squaresize-1)
+            glVertex2i(x0+squaresize-1,y0+1)
             glEnd()
 
 
