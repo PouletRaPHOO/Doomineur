@@ -2,56 +2,51 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
+import random
+
+squaresize = 32
+GridSize = 16
+windowSize = squaresize * GridSize
 
 def drawMap2D(map) :
-    size = 64
     for y in range(len(map)) :
         for x in range(len(map[y])):
             if map[y][x]==1 :
                 glColor3f(1.0,1.0,1.0)
             else :
                 glColor3f(1.0,0.0,3.0)
-            x0 = 500-(x*size)
-            y0 = 500-(y*size)
+            x0 = x*squaresize
+            y0 = y*squaresize
             glBegin(GL_QUADS)
             glVertex2i(x0,y0)
-            glVertex2i(x0,y0+size)
-            glVertex2i(x0+size,y0+size)
-            glVertex2i(x0+size,y0)
+            glVertex2i(x0,y0+squaresize)
+            glVertex2i(x0+squaresize,y0+squaresize)
+            glVertex2i(x0+squaresize,y0)
             glEnd()
 
 
 def iterate() :
-    glViewport(0,0,500,500)
+    glViewport(0,0,windowSize,windowSize)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glOrtho(0.0,500,0.0,500,0.0,1.0)
+    glOrtho(0.0,windowSize,0.0,windowSize,0.0,1.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
-def square() :
-    glBegin(GL_QUADS)
-    glVertex2f(100,100)
-    glVertex2f(100,200)
-    glVertex2f(200,200)
-    glVertex2f(200,100)
-    glEnd()
-
 class Grid:
     def __init__(self) :
-        self.SIZE = 8
-        self.grille = [
-                [1,1,1,1,1,1,1,1],
-                [1,0,0,0,0,0,0,1],
-                [1,0,0,0,1,0,0,1],
-                [1,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,1],
-                [1,0,0,1,0,0,0,1],
-                [1,0,0,0,0,0,0,1],
-                [1,1,1,1,1,1,1,1]
-            ]
+        self.SIZE = GridSize
+        self.grille = [[0 for k in range(self.SIZE)] for j in range(self.SIZE)]
+
+    def gen(self) :
+        for y in range(self.SIZE) :
+            for x in range(self.SIZE) :
+                if x==0 or y==0 or x==self.SIZE-1 or y==self.SIZE-1 or random.randint(0,100)>85:
+                    self.grille[y][x] =1
+
 
 grille = Grid()
+grille.gen()
 
 class Inputs:
     def keyboard(key, x, y):
@@ -78,7 +73,7 @@ glutInit(sys.argv)
 # So is creating an index-mode window.)
 glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
 
-glutInitWindowSize(500,500)
+glutInitWindowSize(windowSize,windowSize)
 glutInitWindowPosition(0,0)
 
 # Create a window, setting its title
