@@ -2,17 +2,18 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
+from math import pi, cos, sin
 
+size = 64
 def drawMap2D(map) :
-    size = 64
     for y in range(len(map)) :
         for x in range(len(map[y])):
             if map[y][x]==1 :
                 glColor3f(1.0,1.0,1.0)
             else :
                 glColor3f(1.0,0.0,3.0)
-            x0 = 500-(x*size)
-            y0 = 500-(y*size)
+            x0 = x*size
+            y0 = y*size
             glBegin(GL_QUADS)
             glVertex2i(x0,y0)
             glVertex2i(x0,y0+size)
@@ -37,6 +38,29 @@ def square() :
     glVertex2f(200,100)
     glEnd()
 
+class Draw:
+    def plot_points(x, y):
+        glColor3f(0.0,1.0,0.0)
+        glPointSize(5.0)
+        glBegin(GL_POINTS)
+        glVertex2f(x*size, y*size)
+        glEnd()
+        glFlush()
+
+    def plot_trait(x, y):
+        glColor3f(1.0,0.0,0.0)
+        glPointSize(5.0)
+        glBegin(GL_LINES)        # GL_POINTS -> GL_LINES
+        glVertex2f(0.0, 0.0)
+        glVertex2f(1.0, 1.0)         # Added another Vertex specifying end coordinates of line
+        glEnd()
+        glFlush()
+
+
+
+
+
+
 class Grid:
     def __init__(self) :
         self.SIZE = 8
@@ -50,12 +74,23 @@ class Grid:
                 [1,0,0,0,0,0,0,1],
                 [1,1,1,1,1,1,1,1]
             ]
+        self.x, self.y = 4,4 
+        self.yau = 0
 
 grille = Grid()
 
 class Inputs:
     def keyboard(key, x, y):
-        print(key, x, y)
+        if key == b"z":
+            grille.x += cos(grille.yau) * 0.2
+            grille.y += sin(grille.yau) * 0.2
+        if key == b"s":
+            grille.x -= cos(grille.yau) * 0.2
+            grille.y -= sin(grille.yau) * 0.2
+        if key == b"q":
+            grille.yau += 0.2
+        if key == b"d":
+            grille.yau -= 0.2
 
 # The display() method does all the work; it has to call the appropriate
 # OpenGL functions to actually display something.
@@ -69,6 +104,9 @@ def display():
     glColor3f(1.0,0.0,3.0)
     #square()
     drawMap2D(grille.grille)
+    glColor3f(1.0,0.0,3.0)
+    Draw.plot_points(grille.x, grille.y)
+    Draw.plot_trait(grille.x, grille.y)
     # Copy the off-screen buffer to the screen.
     glutSwapBuffers()
 
