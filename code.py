@@ -11,7 +11,8 @@ def display():
 
     # ... render stuff in here ...
     # It will go to an off-screen frame buffer.
-
+     
+    drawMap2D(map)
     # Copy the off-screen buffer to the screen.
     glutSwapBuffers()
 
@@ -22,7 +23,7 @@ glutInit(sys.argv)
 glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
 
 # Create a window, setting its title
-glutCreateWindow('interactive')
+glutCreateWindow('Doomineur-3D')
 
 # Set the display callback.  You can set other callbacks for keyboard and
 # mouse events.
@@ -31,3 +32,21 @@ glutDisplayFunc(display)
 # Run the GLUT main loop until the user closes the window.
 glutMainLoop()
 
+
+
+def drawMap2D(map) :
+    for y in range(len(map)) :
+        for x in range(len(map[y])):
+            if x ==1 :
+                glColor3f(1,1,1)
+            else :
+                glColors3f(0,0,0)
+            x0 = x*64
+            y0 = y*64
+            glBegin(GL_QUADS)
+            glVertex(x0,y0)
+            glVertex(x0,y0+64)
+            glVertex(x0+64,y0)
+            glVertex(x0+64,y0+64)
+            glEnd()
+            
