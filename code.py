@@ -90,3 +90,5 @@ glutKeyboardFunc(Inputs.keyboard)
 # Run the GLUT main loop until the user closes the window.
 glutMainLoop()
 
+print("a")
+
