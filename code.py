@@ -2,14 +2,34 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-from math import pi, cos, sin
+from math import pi, cos, sin, tan
 import random
 
 squaresize = 32
 GridSize = 16
 windowSize = squaresize * GridSize
-px = windowSize/2
-py = windowSize/2
+
+def drawRays3D(grille) :
+    dof=0
+    ra = grille.yau
+    for r in range(1):
+        dof =0
+        aTan = 1/tan(ra)
+        if ra>pi :
+            ry = ((grille.y >> 6) << 6) -0.00001
+            rx = (py-ry) * aTan + grille.x
+            y0 = -64
+            x0 = (-y0) * aTan
+        elif ra<pi :
+            ry = ((grille.y >> 6) << 6) + 64
+            rx = (py-ry) * aTan + grille.x
+            y0 = 64
+            x0 = (-y0) * aTan
+        else :
+            
+
+
+
 def drawMap2D(map) :
     for y in range(len(map)) :
         for x in range(len(map[y])):
@@ -18,7 +38,7 @@ def drawMap2D(map) :
             else :
                 glColor3f(1.0,0.0,3.0)
             x0 = x*squaresize
-            y0 = y*squaresize
+            y0 = (y)*squaresize
             glBegin(GL_QUADS)
             glVertex2i(x0+1,y0+1)
             glVertex2i(x0+1,y0+squaresize-1)
@@ -77,9 +97,21 @@ class Grid:
                 if x==0 or y==0 or x==self.SIZE-1 or y==self.SIZE-1 or random.randint(0,100)>85:
                     self.grille[y][x] =1
 
+    def __str__(self) :
+        st = ""
+        for k in self.grille :
+            for i in k :
+                if i==1 :
+                    st+="■ "
+                else :
+                    st+="0 "
+            st+="\n"
+        return st
+
 
 grille = Grid()
 grille.gen()
+
 
 class Inputs:
     def keyboard(key, x, y):
