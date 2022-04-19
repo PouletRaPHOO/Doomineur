@@ -124,8 +124,13 @@ def drawRays3D() :
 
 
         ca = (grille.yau -ra)%(2*pi)
+<<<<<<< HEAD
         distMin = distMin * cos(ca)*0.2
         lineh=((GridSize*windowSize)/distMin)
+=======
+        distV = distV * cos(ca)*0.2
+        lineh=((GridSize*windowSize)/distV)
+>>>>>>> 564f953b04f2abd7d6d86abd278ea2ae3060af9d
         glLineWidth(4)
         glBegin(GL_LINES)
         tempx =(r+1)*4+windowSize
