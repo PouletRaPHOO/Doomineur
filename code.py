@@ -2,38 +2,123 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-from math import pi, cos, sin, tan
+from math import pi, cos, sin, tan, sqrt, inf, log2
 import random
 
-squaresize = 32
-GridSize = 16
+squaresize = 64
+GridSize = 8
 windowSize = squaresize * GridSize
+DR = 0.0174533
 
-def drawRays3D(grille) :
+def dist(dx,dy,ax,ay) :
+    return sqrt((dx-ax)**2+(dy-ay)**2)
+
+def drawRays3D() :
+    px= grille.x*64
+    py = grille.y*64
     dof=0
-    ra = grille.yau
-    for r in range(1):
+    ra = (grille.yau -(-30*DR)) % (2*pi)
+
+    for r in range(120):
+        
+        distH = inf
+        Hy = py
+        Hx =px
         dof =0
-        aTan = 1/tan(ra)
+        aTan =(-1)/tan(ra)
         if ra>pi :
-            ry = ((grille.y >> 6) << 6) -0.00001
-            rx = (py-ry) * aTan + grille.x
+            ry = ((int(py) >> 6) << 6) -0.00001
+            rx = (py-ry) * aTan + px
             y0 = -64
             x0 = (-y0) * aTan
         elif ra<pi :
-            ry = ((grille.y >> 6) << 6) + 64
-            rx = (py-ry) * aTan + grille.x
+            ry = ((int(py) >> 6) << 6) + 64
+            rx = (py-ry) * aTan + px
             y0 = 64
             x0 = (-y0) * aTan
         else :
-            
+            rx = px
+            ry = py
+            dof = GridSize
+        while dof<GridSize:
+            mx = int(rx) >> 6
+            my = int(ry) >> 6
+            if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx] == 1 :
+                dof = GridSize
+                Hx= rx
+                Hy = ry
+                distH = dist(px,py,Hx,Hy)
+            else :
+                rx += x0
+                ry += y0
+                dof += 1
+
+        
 
 
 
-def drawMap2D(map) :
-    for y in range(len(map)) :
-        for x in range(len(map[y])):
-            if map[y][x]==1 :
+        distV= inf
+        dof =0
+        nTan =-tan(ra)
+        if ra>pi/2 and ra<(3*pi)/2 :
+            rx = ((int(px) >> 6) << 6) -0.00001
+            ry = (px-rx) * nTan + py
+            x0 = -64
+            y0 = (-x0) * nTan
+        elif ra<pi/2 or ra>(3*pi)/2 :
+            rx = ((int(px) >> 6) << 6) + 64
+            ry = (px-rx) * nTan + py
+            x0 = 64
+            y0 = (-x0) * nTan
+        else :
+            rx = px
+            ry = py
+            dof = GridSize
+        while dof<GridSize:
+            mx = int(rx) >> 6
+            my = int(ry) >> 6
+            if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx] == 1 :
+                dof = GridSize
+                distV = dist(px,py,rx,ry)
+            else :
+                rx += x0
+                ry += y0
+                dof += 1
+
+        glColor3f(0.9,0,0)
+
+        if distH < distV :
+            rx = Hx
+            ry = Hy
+            distV = distH
+            glColor3f(0.7,0,0)
+
+
+        glLineWidth(2)
+        glBegin(GL_LINES)
+        glVertex2f(px,py)
+        glVertex2f(rx,ry)
+        glEnd()
+
+
+        ca = (grille.yau -ra)%(2*pi)
+        distV = distV * cos(ca)*0.2
+        lineh=((GridSize*windowSize)/distV)%windowSize
+        glLineWidth(4)
+        glBegin(GL_LINES)
+        tempx =(r+1)*4+windowSize
+        lineO = (windowSize/2)-lineh/2
+        glVertex2f(tempx,lineO)
+        glVertex2f(tempx, lineh+lineO)
+        glEnd()
+
+        ra= (ra-(DR/2))% (2*pi)
+
+
+def drawMap2D(grille) :
+    for y in range(len(grille)) :
+        for x in range(len(grille[y])):
+            if grille[y][x]==1 :
                 glColor3f(1.0,1.0,1.0)
             else :
                 glColor3f(1.0,0.0,3.0)
@@ -48,20 +133,13 @@ def drawMap2D(map) :
 
 
 def iterate() :
-    glViewport(0,0,windowSize,windowSize)
+    glViewport(0,0,windowSize*2,windowSize)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glOrtho(0.0,windowSize,0.0,windowSize,0.0,1.0)
+    glOrtho(0.0,windowSize*2,0.0,windowSize,0.0,1.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
-def square() :
-    glBegin(GL_QUADS)
-    glVertex2f(100,100)
-    glVertex2f(100,200)
-    glVertex2f(200,200)
-    glVertex2f(200,100)
-    glEnd()
 
 class Draw:
     def plot_points(x, y):
@@ -80,16 +158,11 @@ class Draw:
         glEnd()
 
 
-
-
-
-
-
 class Grid:
     def __init__(self) :
         self.SIZE = GridSize
         self.grille = [[0 for k in range(self.SIZE)] for j in range(self.SIZE)]
-        self.x, self.y, self.yau = 4,4, 0
+        self.x, self.y, self.yau = 4,4, 0.0001
 
     def gen(self) :
         for y in range(self.SIZE) :
@@ -112,7 +185,6 @@ class Grid:
 grille = Grid()
 grille.gen()
 
-
 class Inputs:
     def keyboard(key, x, y):
         if key == b"z":
@@ -122,29 +194,27 @@ class Inputs:
             grille.x -= cos(grille.yau) * 0.2
             grille.y -= sin(grille.yau) * 0.2
         if key == b"q":
-            grille.yau += 0.2
+            grille.yau = (grille.yau+0.2) %(2*pi)
         if key == b"d":
-            grille.yau -= 0.2
+            grille.yau = (grille.yau-0.2) %(2*pi)
 
-# The display() method does all the work; it has to call the appropriate
-# OpenGL functions to actually display something.
 def display():
-    # Clear the color and depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    # ... render stuff in here ...
-    # It will go to an off-screen frame buffer.
     glLoadIdentity()
+
     iterate()
-    glColor3f(1.0,0.0,3.0)
-    #square()
+
+    
     drawMap2D(grille.grille)
+
     glColor3f(1.0,0.0,3.0)
     Draw.plot_points(grille.x, grille.y)
-    glColor3f(1.0,0.0,0.0)
-    Draw.plot_trait(grille.x*squaresize, grille.y*squaresize, grille.yau)
-    glColor3f(1.0,1.0,0.0)
-    Draw.plot_trait(grille.x*squaresize, grille.y*squaresize, grille.yau+(pi/6))
-    Draw.plot_trait(grille.x*squaresize, grille.y*squaresize, grille.yau-(pi/6))
+
+    drawRays3D()
+
+
+    # Draw.plot_trait(grille.x*squaresize, grille.y*squaresize, grille.yau+(pi/6))
+    # Draw.plot_trait(grille.x*squaresize, grille.y*squaresize, grille.yau-(pi/6))
     # Copy the off-screen buffer to the screen.
     glutSwapBuffers()
 
@@ -154,7 +224,7 @@ glutInit(sys.argv)
 # So is creating an index-mode window.)
 glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
 
-glutInitWindowSize(windowSize,windowSize)
+glutInitWindowSize(windowSize*2,windowSize)
 glutInitWindowPosition(0,0)
 
 # Create a window, setting its title
