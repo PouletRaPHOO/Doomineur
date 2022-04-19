@@ -188,15 +188,15 @@ grille.gen()
 class Inputs:
     def keyboard(key, x, y):
         if key == b"z":
-            grille.x += cos(grille.yau) * 0.2
-            grille.y += sin(grille.yau) * 0.2
+            grille.x += cos(grille.yau) * 0.1
+            grille.y += sin(grille.yau) * 0.1
         if key == b"s":
-            grille.x -= cos(grille.yau) * 0.2
-            grille.y -= sin(grille.yau) * 0.2
+            grille.x -= cos(grille.yau) * 0.1
+            grille.y -= sin(grille.yau) * 0.1
         if key == b"q":
-            grille.yau = (grille.yau+0.2) %(2*pi)
+            grille.yau = (grille.yau+0.1) %(2*pi)
         if key == b"d":
-            grille.yau = (grille.yau-0.2) %(2*pi)
+            grille.yau = (grille.yau-0.1) %(2*pi)
 
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
