@@ -9,90 +9,112 @@ squaresize = 64
 GridSize = 8
 windowSize = squaresize * GridSize
 DR = 0.0174533
+colors = [[0,0,1],[0,1,0],[1,0,0]]
 
 def dist(dx,dy,ax,ay) :
     return sqrt((dx-ax)**2+(dy-ay)**2)
 
+
+def getRay3D(ra,px,py) :
+
+    distH = inf
+    Hy = py
+    Hx =px
+    dof =0
+    aTan =(-1)/tan(ra)
+    if ra>pi :
+        ry = ((int(py) >> 6) << 6) -0.00001
+        rx = (py-ry) * aTan + px
+        y0 = -64
+        x0 = (-y0) * aTan
+    elif ra<pi :
+        ry = ((int(py) >> 6) << 6) + 64
+        rx = (py-ry) * aTan + px
+        y0 = 64
+        x0 = (-y0) * aTan
+    else :
+        rx = px
+        ry = py
+        dof = GridSize
+    while dof<GridSize:
+        mx = int(rx) >> 6
+        my = int(ry) >> 6
+        if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx] >= 1 :
+            dof = GridSize
+            Hx= rx
+            Hy = ry
+            distH = dist(px,py,Hx,Hy)
+        else :
+            rx += x0
+            ry += y0
+            dof += 1
+
+    
+
+    distV= inf
+    dof =0
+    nTan =-tan(ra)
+    if ra>pi/2 and ra<(3*pi)/2 :
+        rx = ((int(px) >> 6) << 6) -0.00001
+        ry = (px-rx) * nTan + py
+        x0 = -64
+        y0 = (-x0) * nTan
+    elif ra<pi/2 or ra>(3*pi)/2 :
+        rx = ((int(px) >> 6) << 6) + 64
+        ry = (px-rx) * nTan + py
+        x0 = 64
+        y0 = (-x0) * nTan
+    else :
+        rx = px
+        ry = py
+        dof = GridSize
+    while dof<GridSize:
+        mx = int(rx) >> 6
+        my = int(ry) >> 6
+        if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx] >= 1 :
+            dof = GridSize
+            distV = dist(px,py,rx,ry)
+        else :
+            rx += x0
+            ry += y0
+            dof += 1
+
+    if distH < distV :
+        rx = Hx
+        ry = Hy
+        mx = int(rx) >> 6
+        my = int(ry) >> 6
+
+    return (distH,distV,min(distH,distV),rx,ry,mx,my)
+
 def drawRays3D() :
     px= grille.x*64
     py = grille.y*64
-    dof=0
     ra = (grille.yau -(-30*DR)) % (2*pi)
 
     for r in range(120):
         
-        distH = inf
-        Hy = py
-        Hx =px
-        dof =0
-        aTan =(-1)/tan(ra)
-        if ra>pi :
-            ry = ((int(py) >> 6) << 6) -0.00001
-            rx = (py-ry) * aTan + px
-            y0 = -64
-            x0 = (-y0) * aTan
-        elif ra<pi :
-            ry = ((int(py) >> 6) << 6) + 64
-            rx = (py-ry) * aTan + px
-            y0 = 64
-            x0 = (-y0) * aTan
-        else :
-            rx = px
-            ry = py
-            dof = GridSize
-        while dof<GridSize:
-            mx = int(rx) >> 6
-            my = int(ry) >> 6
-            if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx] == 1 :
-                dof = GridSize
-                Hx= rx
-                Hy = ry
-                distH = dist(px,py,Hx,Hy)
-            else :
-                rx += x0
-                ry += y0
-                dof += 1
+        distH,distV,distMin,rx,ry,mx,my = getRay3D(ra,px,py)
 
+
+        c = [1.0,0.0,0.0]
+
+        if 0<=my<GridSize and 0<=mx<GridSize :
+            c = colors[grille.grille[my][mx]-1][0:]
         
 
 
-
-        distV= inf
-        dof =0
-        nTan =-tan(ra)
-        if ra>pi/2 and ra<(3*pi)/2 :
-            rx = ((int(px) >> 6) << 6) -0.00001
-            ry = (px-rx) * nTan + py
-            x0 = -64
-            y0 = (-x0) * nTan
-        elif ra<pi/2 or ra>(3*pi)/2 :
-            rx = ((int(px) >> 6) << 6) + 64
-            ry = (px-rx) * nTan + py
-            x0 = 64
-            y0 = (-x0) * nTan
-        else :
-            rx = px
-            ry = py
-            dof = GridSize
-        while dof<GridSize:
-            mx = int(rx) >> 6
-            my = int(ry) >> 6
-            if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx] == 1 :
-                dof = GridSize
-                distV = dist(px,py,rx,ry)
-            else :
-                rx += x0
-                ry += y0
-                dof += 1
-
-        glColor3f(0.9,0,0)
-
         if distH < distV :
-            rx = Hx
-            ry = Hy
-            distV = distH
-            glColor3f(0.7,0,0)
+            c[0] = c[0] * 0.7
+            c[1] = c[1] * 0.7
+            c[2] = c[2] * 0.7
+        else :
+            c[0] = c[0] * 0.9
+            c[1] = c[1] * 0.9
+            c[2] = c[2] * 0.9
 
+
+        glColor3f(c[0],c[1],c[2])
 
         glLineWidth(2)
         glBegin(GL_LINES)
@@ -102,8 +124,8 @@ def drawRays3D() :
 
 
         ca = (grille.yau -ra)%(2*pi)
-        distV = distV * cos(ca)*0.2
-        lineh=((GridSize*windowSize)/distV)%windowSize
+        distMin = distMin * cos(ca)*0.2
+        lineh=((GridSize*windowSize)/distMin)
         glLineWidth(4)
         glBegin(GL_LINES)
         tempx =(r+1)*4+windowSize
@@ -118,7 +140,7 @@ def drawRays3D() :
 def drawMap2D(grille) :
     for y in range(len(grille)) :
         for x in range(len(grille[y])):
-            if grille[y][x]==1 :
+            if grille[y][x]>=1 :
                 glColor3f(1.0,1.0,1.0)
             else :
                 glColor3f(1.0,0.0,3.0)
@@ -168,7 +190,7 @@ class Grid:
         for y in range(self.SIZE) :
             for x in range(self.SIZE) :
                 if x==0 or y==0 or x==self.SIZE-1 or y==self.SIZE-1 or random.randint(0,100)>85:
-                    self.grille[y][x] =1
+                    self.grille[y][x] =random.randint(1,3)
 
     def __str__(self) :
         st = ""
