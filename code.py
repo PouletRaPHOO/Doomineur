@@ -13,7 +13,7 @@ colors = [[0,0,1],[0,1,0],[1,0,0]]
 cursorw = 3
 cursorl = 15
 resolution = 2
-playerSpeed = 0.01
+playerSpeed = 0.1
 
 fps = 0.0
 frame1 = 0.0
@@ -94,8 +94,8 @@ def getRay3D(ra,px,py) :
     return (distH,distV,min(distH,distV),rx,ry,mx,my)
 
 def drawRays3D() :
-    px= grille.x*64
-    py = grille.y*64
+    px= grille.x
+    py = grille.y
     ra = (grille.yau -(-32*DR)) % (2*pi)
 
     for r in range(resolution*64):
@@ -107,7 +107,6 @@ def drawRays3D() :
 
         if 0<=my<GridSize and 0<=mx<GridSize :
             c = colors[grille.grille[my][mx].type-1][0:]
-        
 
 
         if distH < distV :
@@ -132,9 +131,9 @@ def drawRays3D() :
         ca = (grille.yau -ra)%(2*pi)
         distMin = distMin * cos(ca)*0.2
         lineh=((GridSize*windowSize)/distMin)
-        glLineWidth(4)
+        glLineWidth((8/resolution)) 
         glBegin(GL_LINES)
-        tempx =(r+1)*4+windowSize
+        tempx =(r+1)*(8/resolution)+windowSize
         lineO = (windowSize/2)-lineh/2
         glVertex2f(tempx,lineO)
         glVertex2f(tempx, lineh+lineO)
@@ -177,16 +176,16 @@ def drawCursor():
     glEnd()
     
 def destroy():
-    px= grille.x*64
-    py = grille.y*64
+    px= grille.x
+    py = grille.y
     ra = grille.yau
     distH,distV,distMin,rx,ry,mx,my = getRay3D(ra,px,py)
     if 0<=my<GridSize and 0<=mx<GridSize and not grille.grille[my][mx].unbreakable:
         grille.grille[my][mx].type = 0
 
 def construct() :
-    px= grille.x*64
-    py = grille.y*64
+    px= grille.x
+    py = grille.y
     ra = grille.yau
     distH,distV,distMin,rx,ry,mx,my = getRay3D(ra,px,py)
 
@@ -219,7 +218,7 @@ class Draw:
         glColor3f(0.0,1.0,0.0)
         glPointSize(5.0)
         glBegin(GL_POINTS)
-        glVertex2f(x*squaresize, y*squaresize)
+        glVertex2f(x, y)
         glEnd()
         glFlush()
 
@@ -242,7 +241,7 @@ class Grid:
     def __init__(self) :
         self.SIZE = GridSize
         self.grille = [[Case(0) for k in range(self.SIZE)] for j in range(self.SIZE)]
-        self.x, self.y, self.yau = 4,4, 0.0001
+        self.x, self.y, self.yau = 64*4,64*4, 0.0001
 
     def gen(self) :
         for y in range(self.SIZE) :
@@ -301,23 +300,23 @@ class Inputs:
             Inputs.d = 0
     
     def actionsOnPress(fps):
-        px = grille.x * 64
-        py = grille.y * 64
+        px = grille.x
+        py = grille.y
         ra = grille.yau
         if Inputs.z:
             distH,distV,distMin,rx,ry,mx,my = getRay3D(ra,px,py)
-            if distMin >= playerSpeed*64*fps:
+            if distMin >= playerSpeed*fps:
                 grille.x += cos(grille.yau) * playerSpeed * fps
                 grille.y += sin(grille.yau) * playerSpeed * fps
         if Inputs.s:
             distH,distV,distMin,rx,ry,mx,my = getRay3D( (ra+pi)%(2*pi),px,py)
-            if distMin >= playerSpeed*64*fps:
+            if distMin >= playerSpeed*fps:
                 grille.x -= cos(grille.yau) * playerSpeed * fps
                 grille.y -= sin(grille.yau) * playerSpeed * fps
         if Inputs.q:
-            grille.yau = (grille.yau+0.004*fps) %(2*pi)
+            grille.yau = (grille.yau+0.003*fps) %(2*pi)
         if Inputs.d:
-            grille.yau = (grille.yau-0.004*fps) %(2*pi)
+            grille.yau = (grille.yau-0.003*fps) %(2*pi)
 
 def display():
     global frame1
@@ -327,6 +326,7 @@ def display():
     Inputs.actionsOnPress(fps)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
+    glutSetCursor(GLUT_CURSOR_NONE)
 
     iterate()
 
