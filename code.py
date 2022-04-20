@@ -23,7 +23,6 @@ def dist(dx,dy,ax,ay) :
     return sqrt((dx-ax)**2+(dy-ay)**2)
 
 def getRay3D(ra,px,py) :
-
     distH = inf
     Hy = py
     Hx =px
@@ -182,7 +181,7 @@ def destroy():
     py = grille.y*64
     ra = grille.yau
     distH,distV,distMin,rx,ry,mx,my = getRay3D(ra,px,py)
-    if 0<=my<GridSize and 0<=mx<GridSize :
+    if 0<=my<GridSize and 0<=mx<GridSize and not grille.grille[my][mx].unbreakable:
         grille.grille[my][mx].type = 0
 
 def construct() :
@@ -234,8 +233,10 @@ class Draw:
 class Case:
     def __init__(self,arg):
         self.type=arg
-        self.number=0
-        self.flagged =0
+        self.number = 0
+        self.flagged = 0
+        self.unbreakable = 0
+        self.color = (1.0, 1.0, 1.0)
 
 class Grid:
     def __init__(self) :
@@ -246,14 +247,17 @@ class Grid:
     def gen(self) :
         for y in range(self.SIZE) :
             for x in range(self.SIZE) :
-                if x==0 or y==0 or x==self.SIZE-1 or y==self.SIZE-1 or random.randint(0,100)>85:
+                if x==0 or y==0 or x==self.SIZE-1 or y==self.SIZE-1:
+                    self.grille[y][x].type = 1
+                    self.grille[y][x].unbreakable = 1
+                elif random.randint(0,100)>85:
                     self.grille[y][x].type =random.randint(1,3)
 
     def __str__(self) :
         st = ""
-        for k in self.grille :
-            for i in k :
-                if i.type==1 :
+        for k in self.grille[::-1] :
+            for i in k:
+                if i.type>1 :
                     st+="■ "
                 else :
                     st+="0 "
@@ -342,6 +346,7 @@ def display():
     # Copy the off-screen buffer to the screen.
     glutSwapBuffers()
 
+
 glutInit(sys.argv)
 
 # Create a double-buffer RGBA window.   (Single-buffering is possible.
@@ -366,3 +371,4 @@ glutMainLoop()
 
 print("a")
 
+# vim:set foldmethod=indent:
