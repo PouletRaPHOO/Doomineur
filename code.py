@@ -338,6 +338,13 @@ class Inputs:
         if Inputs.d:
             grille.yau = (grille.yau-0.003*fps) %(2*pi)
 
+    def mouseDown(button, state, x,y):
+        if button == GLUT_LEFT_BUTTON and state == GLUT_DOWN:
+            destroy()
+        if button == GLUT_RIGHT_BUTTON and state == GLUT_DOWN:
+            construct()
+
+
 def display():
     global frame1
     frame2 = glutGet(GLUT_ELAPSED_TIME)
@@ -386,6 +393,11 @@ glutDisplayFunc(display)
 glutIdleFunc(display)
 glutKeyboardFunc(Inputs.keyboardDown)
 glutKeyboardUpFunc(Inputs.keyboardUp)
+glutMouseFunc(Inputs.mouseDown);
+
+
+
+
 
 # Run the GLUT main loop until the user closes the window.
 glutMainLoop()
