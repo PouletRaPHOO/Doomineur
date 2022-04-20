@@ -19,6 +19,8 @@ fps = 0.0
 frame1 = 0.0
 frame2 = 0.0
 
+nb_bombes = 7
+
 def dist(dx,dy,ax,ay) :
     return sqrt((dx-ax)**2+(dy-ay)**2)
 
@@ -235,6 +237,8 @@ class Case:
         self.number = 0
         self.flagged = 0
         self.unbreakable = 0
+        self.nb_bombes = 0
+        self.is_bombe = False
         self.color = (1.0, 1.0, 1.0)
 
 class Grid:
@@ -244,22 +248,38 @@ class Grid:
         self.x, self.y, self.yau = 64*4,64*4, 0.0001
 
     def gen(self) :
+        cos_bombes_grille = []
+        for j in range(1, self.SIZE-1):
+            for k in range(1, self.SIZE-1):
+                cos_bombes_grille.append((j,k))
+        random.shuffle(cos_bombes_grille)
+        for i in range(nb_bombes):
+            j,k = cos_bombes_grille[i]
+            self.grille[j][k].type = random.randint(1,3)
+            self.grille[j][k].is_bombe = True
+
         for y in range(self.SIZE) :
             for x in range(self.SIZE) :
                 if x==0 or y==0 or x==self.SIZE-1 or y==self.SIZE-1:
                     self.grille[y][x].type = 1
                     self.grille[y][x].unbreakable = 1
-                elif random.randint(0,100)>85:
-                    self.grille[y][x].type =random.randint(1,3)
+
+                elif not self.grille[y][x].is_bombe:
+                    for i in range(-1, 2):
+                        for j in range(-1, 2):
+                            if self.grille[y+i][x+j].is_bombe:
+                                self.grille[y][x].nb_bombes += 1
+                # elif random.randint(0,100)>85:
+                #     self.grille[y][x].type =random.randint(1,3)
 
     def __str__(self) :
         st = ""
         for k in self.grille[::-1] :
             for i in k:
-                if i.type>1 :
+                if i.is_bombe:
                     st+="■ "
                 else :
-                    st+="0 "
+                    st+=f"{i.nb_bombes} "
             st+="\n"
         return st
 
@@ -339,6 +359,7 @@ def display():
     drawRays3D()
 
     drawCursor()
+    # print(grille)
 
 
     # Draw.plot_trait(grille.x*squaresize, grille.y*squaresize, grille.yau+(pi/6))
