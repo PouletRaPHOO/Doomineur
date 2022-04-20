@@ -13,6 +13,11 @@ colors = [[0,0,1],[0,1,0],[1,0,0]]
 cursorw = 3
 cursorl = 15
 resolution = 2
+playerSpeed = 0.1
+
+fps = 0.0
+frame1 = 0.0
+frame2 = 0.0
 
 def dist(dx,dy,ax,ay) :
     return sqrt((dx-ax)**2+(dy-ay)**2)
@@ -259,23 +264,62 @@ grille = Grid()
 grille.gen()
 
 class Inputs:
+    z = 0
+    s = 0
+    q = 0
+    d = 0
     def keyboard(key, x, y):
-        if key == b"z":
-            grille.x += cos(grille.yau) * 5.5
-            grille.y += sin(grille.yau) * 5.5
-        if key == b"s":
-            grille.x -= cos(grille.yau) * 5.5
-            grille.y -= sin(grille.yau) * 5.5
-        if key == b"q":
-            grille.yau = (grille.yau+0.1) %(2*pi)
-        if key == b"d":
-            grille.yau = (grille.yau-0.1) %(2*pi)
         if key == b"e":
             destroy()
         if key == b"a":
             construct()
 
+    def keyboardDown(key, x, y):
+        if key==b"z":
+            Inputs.z = 1
+        if key==b"s":
+            Inputs.s = 1
+        if key==b"q":
+            Inputs.q = 1
+        if key==b"d":
+            Inputs.d = 1
+        Inputs.keyboard(key, x , y)
+
+    def keyboardUp(key, x, y):
+        if key==b"z":
+            Inputs.z = 0
+        if key==b"s":
+            Inputs.s = 0
+        if key==b"q":
+            Inputs.q = 0
+        if key==b"d":
+            Inputs.d = 0
+    
+    def actionsOnPress(fps):
+        px = grille.x
+        py = grille.y
+        ra = grille.yau
+        if Inputs.z:
+            distH,distV,distMin,rx,ry,mx,my = getRay3D(ra,px,py)
+            if distMin >= playerSpeed*fps:
+                grille.x += cos(grille.yau) * playerSpeed * fps
+                grille.y += sin(grille.yau) * playerSpeed * fps
+        if Inputs.s:
+            distH,distV,distMin,rx,ry,mx,my = getRay3D( (ra+pi)%(2*pi),px,py)
+            if distMin >= playerSpeed*fps:
+                grille.x -= cos(grille.yau) * playerSpeed * fps
+                grille.y -= sin(grille.yau) * playerSpeed * fps
+        if Inputs.q:
+            grille.yau = (grille.yau+0.003*fps) %(2*pi)
+        if Inputs.d:
+            grille.yau = (grille.yau-0.003*fps) %(2*pi)
+
 def display():
+    global frame1
+    frame2 = glutGet(GLUT_ELAPSED_TIME)
+    fps = frame2 - frame1
+    frame1 = glutGet(GLUT_ELAPSED_TIME)
+    Inputs.actionsOnPress(fps)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
     glutSetCursor(GLUT_CURSOR_NONE)
@@ -314,7 +358,8 @@ glutCreateWindow('Doomineur-3D')
 # mouse events.
 glutDisplayFunc(display)
 glutIdleFunc(display)
-glutKeyboardFunc(Inputs.keyboard)
+glutKeyboardFunc(Inputs.keyboardDown)
+glutKeyboardUpFunc(Inputs.keyboardUp)
 
 # Run the GLUT main loop until the user closes the window.
 glutMainLoop()
