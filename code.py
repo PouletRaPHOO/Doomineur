@@ -10,10 +10,12 @@ GridSize = 8
 windowSize = squaresize * GridSize
 DR = 0.0174533
 colors = [[0,0,1],[0,1,0],[1,0,0]]
+cursorw = 3
+cursorl = 15
+resolution = 2
 
 def dist(dx,dy,ax,ay) :
     return sqrt((dx-ax)**2+(dy-ay)**2)
-
 
 def getRay3D(ra,px,py) :
 
@@ -39,7 +41,7 @@ def getRay3D(ra,px,py) :
     while dof<GridSize:
         mx = int(rx) >> 6
         my = int(ry) >> 6
-        if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx] >= 1 :
+        if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx].type >= 1 :
             dof = GridSize
             Hx= rx
             Hy = ry
@@ -71,7 +73,7 @@ def getRay3D(ra,px,py) :
     while dof<GridSize:
         mx = int(rx) >> 6
         my = int(ry) >> 6
-        if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx] >= 1 :
+        if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx].type >= 1 :
             dof = GridSize
             distV = dist(px,py,rx,ry)
         else :
@@ -90,9 +92,9 @@ def getRay3D(ra,px,py) :
 def drawRays3D() :
     px= grille.x*64
     py = grille.y*64
-    ra = (grille.yau -(-30*DR)) % (2*pi)
+    ra = (grille.yau -(-32*DR)) % (2*pi)
 
-    for r in range(120):
+    for r in range(resolution*64):
         
         distH,distV,distMin,rx,ry,mx,my = getRay3D(ra,px,py)
 
@@ -100,7 +102,7 @@ def drawRays3D() :
         c = [1.0,0.0,0.0]
 
         if 0<=my<GridSize and 0<=mx<GridSize :
-            c = colors[grille.grille[my][mx]-1][0:]
+            c = colors[grille.grille[my][mx].type-1][0:]
         
 
 
@@ -134,13 +136,12 @@ def drawRays3D() :
         glVertex2f(tempx, lineh+lineO)
         glEnd()
 
-        ra= (ra-(DR/2))% (2*pi)
-
+        ra= (ra-(DR/resolution))% (2*pi)
 
 def drawMap2D(grille) :
     for y in range(len(grille)) :
         for x in range(len(grille[y])):
-            if grille[y][x]>=1 :
+            if grille[y][x].type>=1 :
                 glColor3f(1.0,1.0,1.0)
             else :
                 glColor3f(1.0,0.0,3.0)
@@ -152,6 +153,52 @@ def drawMap2D(grille) :
             glVertex2i(x0+squaresize-1,y0+squaresize-1)
             glVertex2i(x0+squaresize-1,y0+1)
             glEnd()
+
+def drawCursor():
+    glColor3f(0,1,0)
+    glBegin(GL_QUADS)
+    x0 = windowSize + windowSize/2
+    y0 = windowSize/2
+    glVertex2f(x0-cursorl/2,y0+cursorw/2)
+    glVertex2f(x0+cursorl/2,y0+cursorw/2)
+    glVertex2f(x0+cursorl/2,y0-cursorw/2)
+    glVertex2f(x0-cursorl/2,y0-cursorw/2)
+    glEnd()
+
+    glBegin(GL_QUADS)
+    glVertex2f(x0-cursorw/2,y0+cursorl/2)
+    glVertex2f(x0+cursorw/2,y0+cursorl/2)
+    glVertex2f(x0+cursorw/2,y0-cursorl/2)
+    glVertex2f(x0-cursorw/2,y0-cursorl/2)
+    glEnd()
+    
+def destroy():
+    px= grille.x*64
+    py = grille.y*64
+    ra = grille.yau
+    distH,distV,distMin,rx,ry,mx,my = getRay3D(ra,px,py)
+    if 0<=my<GridSize and 0<=mx<GridSize :
+        grille.grille[my][mx].type = 0
+
+def construct() :
+    px= grille.x*64
+    py = grille.y*64
+    ra = grille.yau
+    distH,distV,distMin,rx,ry,mx,my = getRay3D(ra,px,py)
+
+    if distH==distMin :
+        if 0<=ra<pi:
+            my-=1
+        else :
+            my+= 1
+    else :
+        if pi/2<=ra<3*pi/2:
+            mx+=1
+        else :
+            mx-= 1
+
+    if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx].type == 0:
+        grille.grille[my][mx].type = random.randint(1,3)
 
 
 def iterate() :
@@ -179,24 +226,29 @@ class Draw:
         glVertex2f(x+cos(angle)*40, y+sin(angle)*40)         # Added another Vertex specifying end coordinates of line
         glEnd()
 
+class Case:
+    def __init__(self,arg):
+        self.type=arg
+        self.number=0
+        self.flagged =0
 
 class Grid:
     def __init__(self) :
         self.SIZE = GridSize
-        self.grille = [[0 for k in range(self.SIZE)] for j in range(self.SIZE)]
+        self.grille = [[Case(0) for k in range(self.SIZE)] for j in range(self.SIZE)]
         self.x, self.y, self.yau = 4,4, 0.0001
 
     def gen(self) :
         for y in range(self.SIZE) :
             for x in range(self.SIZE) :
                 if x==0 or y==0 or x==self.SIZE-1 or y==self.SIZE-1 or random.randint(0,100)>85:
-                    self.grille[y][x] =random.randint(1,3)
+                    self.grille[y][x].type =random.randint(1,3)
 
     def __str__(self) :
         st = ""
         for k in self.grille :
             for i in k :
-                if i==1 :
+                if i.type==1 :
                     st+="■ "
                 else :
                     st+="0 "
@@ -219,6 +271,10 @@ class Inputs:
             grille.yau = (grille.yau+0.1) %(2*pi)
         if key == b"d":
             grille.yau = (grille.yau-0.1) %(2*pi)
+        if key == b"e":
+            destroy()
+        if key == b"a":
+            construct()
 
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -233,6 +289,8 @@ def display():
     Draw.plot_points(grille.x, grille.y)
 
     drawRays3D()
+
+    drawCursor()
 
 
     # Draw.plot_trait(grille.x*squaresize, grille.y*squaresize, grille.yau+(pi/6))
