@@ -6,10 +6,14 @@ from math import pi, cos, sin, tan, sqrt, inf, log2
 import random
 
 squaresize = 64
-GridSize = 8
+ratio = int(64/squaresize)
+GridSize = 8*ratio
+
 windowSize = squaresize * GridSize
 DR = 0.0174533
+
 colors = [[0,0,1],[0,1,0],[1,0,0]]
+
 cursorw = 3
 cursorl = 15
 resolution = 2
@@ -124,8 +128,8 @@ def drawRays3D() :
 
         glLineWidth(2)
         glBegin(GL_LINES)
-        glVertex2f(px,py)
-        glVertex2f(rx,ry)
+        glVertex2f(px/ratio,py/ratio)
+        glVertex2f(rx/ratio,ry/ratio)
         glEnd()
 
 
@@ -219,7 +223,7 @@ class Draw:
         glColor3f(0.0,1.0,0.0)
         glPointSize(5.0)
         glBegin(GL_POINTS)
-        glVertex2f(x, y)
+        glVertex2f(x/ratio, y/ratio)
         glEnd()
         glFlush()
 
