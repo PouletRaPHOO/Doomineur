@@ -1,11 +1,16 @@
+#-------------------- Imports -------------------------#
 import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from math import pi, cos, sin, tan, sqrt, inf, log2
 import random
+#-------------------------------------------------------#
 
-squaresize = 64
+
+
+#--------------------- Constants -----------------------#
+squaresize = 32
 ratio = int(64/squaresize)
 GridSize = 8*ratio
 
@@ -24,7 +29,11 @@ frame1 = 0.0
 frame2 = 0.0
 
 nb_bombes = 7
+#-------------------------------------------------------#
 
+
+
+#--------------------- Functions -----------------------#
 def dist(dx,dy,ax,ay) :
     return sqrt((dx-ax)**2+(dy-ay)**2)
 
@@ -209,7 +218,6 @@ def construct() :
     if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx].type == 0:
         grille.grille[my][mx].type = random.randint(1,3)
 
-
 def iterate() :
     glViewport(0,0,windowSize*2,windowSize)
     glMatrixMode(GL_PROJECTION)
@@ -217,8 +225,11 @@ def iterate() :
     glOrtho(0.0,windowSize*2,0.0,windowSize,0.0,1.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
+#-------------------------------------------------------#
 
 
+
+#--------------------- Classes -------------------------#
 class Draw:
     def plot_points(x, y):
         glColor3f(0.0,1.0,0.0)
@@ -287,7 +298,6 @@ class Grid:
             st+="\n"
         return st
 
-
 grille = Grid()
 grille.gen()
 
@@ -347,8 +357,11 @@ class Inputs:
             destroy()
         if button == GLUT_RIGHT_BUTTON and state == GLUT_DOWN:
             construct()
+#-------------------------------------------------------#
 
 
+
+#--------------------- Main Loop -----------------------#
 def display():
     global frame1
     frame2 = glutGet(GLUT_ELAPSED_TIME)
@@ -378,7 +391,6 @@ def display():
     # Copy the off-screen buffer to the screen.
     glutSwapBuffers()
 
-
 glutInit(sys.argv)
 
 # Create a double-buffer RGBA window.   (Single-buffering is possible.
@@ -399,13 +411,9 @@ glutKeyboardFunc(Inputs.keyboardDown)
 glutKeyboardUpFunc(Inputs.keyboardUp)
 glutMouseFunc(Inputs.mouseDown);
 
-
-
-
-
 # Run the GLUT main loop until the user closes the window.
 glutMainLoop()
 
 print("a")
-
+#-------------------------------------------------------#
 # vim:set foldmethod=indent:
