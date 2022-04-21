@@ -3,14 +3,16 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-from math import pi, cos, sin, tan, sqrt, inf, log2
+from math import pi, cos, sin, tan, sqrt, inf, log2, floor, ceil
 import random
 #-------------------------------------------------------#
 
-
+#--------------------- SETTINGS ------------------------#
+SIZE = 2
+#-------------------------------------------------------#
 
 #--------------------- Constants -----------------------#
-squaresize = 32
+squaresize = int(4/SIZE)*16
 ratio = int(64/squaresize)
 GridSize = 8*ratio
 
@@ -28,7 +30,14 @@ fps = 0.0
 frame1 = 0.0
 frame2 = 0.0
 
-nb_bombes = 7
+nb_bombes = int(((GridSize-1)**2)/5)
+
+UNBREAKABLE = 1
+BOMB=2
+NONBOMB = 3
+
+CONFIRMFLAG = 1
+TEMPFLAG = 2
 #-------------------------------------------------------#
 
 
@@ -195,7 +204,7 @@ def destroy():
     py = grille.y
     ra = grille.yau
     distH,distV,distMin,rx,ry,mx,my = getRay3D(ra,px,py)
-    if 0<=my<GridSize and 0<=mx<GridSize and not grille.grille[my][mx].unbreakable:
+    if 0<=my<GridSize and 0<=mx<GridSize and not grille.grille[my][mx].type == UNBREAKABLE:
         grille.grille[my][mx].type = 0
 
 def construct() :
@@ -216,7 +225,7 @@ def construct() :
             mx-= 1
 
     if 0<=my<GridSize and 0<=mx<GridSize and grille.grille[my][mx].type == 0:
-        grille.grille[my][mx].type = random.randint(1,3)
+        grille.grille[my][mx].type = NONBOMB
 
 def iterate() :
     glViewport(0,0,windowSize*2,windowSize)
@@ -251,16 +260,13 @@ class Case:
         self.type=arg
         self.number = 0
         self.flagged = 0
-        self.unbreakable = 0
-        self.nb_bombes = 0
-        self.is_bombe = False
         self.color = (1.0, 1.0, 1.0)
 
 class Grid:
     def __init__(self) :
         self.SIZE = GridSize
         self.grille = [[Case(0) for k in range(self.SIZE)] for j in range(self.SIZE)]
-        self.x, self.y, self.yau = 64*4,64*4, 0.0001
+        self.x, self.y, self.yau = squaresize*4+squaresize/2,squaresize*4+squaresize/2, 0.0001
 
     def gen(self) :
         cos_bombes_grille = []
@@ -268,22 +274,26 @@ class Grid:
             for k in range(1, self.SIZE-1):
                 cos_bombes_grille.append((j,k))
         random.shuffle(cos_bombes_grille)
-        for i in range(nb_bombes):
-            j,k = cos_bombes_grille[i]
-            self.grille[j][k].type = random.randint(1,3)
-            self.grille[j][k].is_bombe = True
+
+        i= nb_bombes
+        a = 0
+        while i>0 and a < len(cos_bombes_grille):
+            print("a")
+            j,k = cos_bombes_grille[a]
+            if abs(j-(self.y/(squaresize*ratio)))>1 or abs(k-(self.x/(squaresize*ratio)))>1 :
+                self.grille[j][k].type = BOMB
+                for v in range(j-1,j+2) :
+                    for w in range(k-1,k+2) :
+                        self.grille[v][w].number +=1
+                i -= 1
+            a+=1
 
         for y in range(self.SIZE) :
             for x in range(self.SIZE) :
                 if x==0 or y==0 or x==self.SIZE-1 or y==self.SIZE-1:
-                    self.grille[y][x].type = 1
-                    self.grille[y][x].unbreakable = 1
-
-                elif not self.grille[y][x].is_bombe:
-                    for i in range(-1, 2):
-                        for j in range(-1, 2):
-                            if self.grille[y+i][x+j].is_bombe:
-                                self.grille[y][x].nb_bombes += 1
+                    self.grille[y][x].type = UNBREAKABLE
+                elif (abs(y-(self.y/(squaresize*ratio)))>1 or abs(x-(self.x/(squaresize*ratio)))>1) and not self.grille[y][x].type == BOMB :
+                    self.grille[y][x].type = NONBOMB
                 # elif random.randint(0,100)>85:
                 #     self.grille[y][x].type =random.randint(1,3)
 
@@ -291,10 +301,10 @@ class Grid:
         st = ""
         for k in self.grille[::-1] :
             for i in k:
-                if i.is_bombe:
+                if i.type == BOMB:
                     st+="■ "
                 else :
-                    st+=f"{i.nb_bombes} "
+                    st+=f"{i.number} "
             st+="\n"
         return st
 
@@ -310,7 +320,9 @@ class Inputs:
         if key == b"e":
             destroy()
         if key == b"a":
-            construct()
+            #construct()
+            print("En construction")
+            print(grille)
 
     def keyboardDown(key, x, y):
         if key==b"z":
@@ -409,11 +421,11 @@ glutDisplayFunc(display)
 glutIdleFunc(display)
 glutKeyboardFunc(Inputs.keyboardDown)
 glutKeyboardUpFunc(Inputs.keyboardUp)
-glutMouseFunc(Inputs.mouseDown);
+glutMouseFunc(Inputs.mouseDown)
 
 # Run the GLUT main loop until the user closes the window.
 glutMainLoop()
 
 print("a")
-#-------------------------------------------------------#
 # vim:set foldmethod=indent:
+#-------------------------------------------------------#
